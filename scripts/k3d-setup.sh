@@ -1,4 +1,3 @@
-cat > ~/sentinel-ai-platform/scripts/k3d-setup.sh << 'SCRIPT'
 #!/bin/bash
 
 # ── Colors ─────────────────────────────────────────────────────────
