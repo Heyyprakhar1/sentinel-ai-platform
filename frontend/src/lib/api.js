@@ -21,6 +21,14 @@ export const api = {
   metrics:        () => get('/metrics'),
   alerts:         () => get('/alerts'),
   recommendation: () => get('/recommendation'),
+  clusterOverview: () => get('/cluster/overview'),
+
+  namespaceDetails: (name) =>
+    get(`/namespace/${name}`),
+  
+  namespaceRCA: (name) =>
+    get(`/namespace/${name}/rca`),
+
 }
 
 export const prom = {
