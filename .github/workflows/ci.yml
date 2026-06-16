@@ -1,4 +1,3 @@
- sed -n '1,250p' .github/workflows/ci.yml
 name: CI Pipeline
 
 on:
