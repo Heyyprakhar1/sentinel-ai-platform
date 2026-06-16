@@ -216,7 +216,7 @@ FastAPI Backend
 | AI RCA Engine | Log + Event + Description analysis → structured JSON RCA | ✅ |
 | AIOps | Incident prioritization + remediation recommendations | ✅ |
 | Frontend | React 18 + Vite — live metrics + K8s Operations Center dashboard | ✅ |
-| GitOps | ArgoCD — continuous deployment | 🔄 In Progress |
+| GitOps | ArgoCD — continuous deployment | ✅ |
 
 ---
 
@@ -1135,7 +1135,7 @@ Your AWS CLI user needs: `eks:*`, `ec2:*`, `iam:PassRole`, `iam:CreateRole`, `ec
 | 12 | Kubernetes Health Scoring Engine — cluster score + namespace scores | ✅ Complete |
 | 13 | AI RCA Engine — Ollama + Qwen2.5-Coder + evidence collection | ✅ Complete |
 | 14 | Kubernetes AI Operations Center — namespace cards + drill-down + RCA pan ✅ Complete |
-| 15 | GitOps — ArgoCD ApplicationSet, multi-env continuous deployment | 🔄 In Progress |
+| 15 | GitOps — ArgoCD ApplicationSet, multi-env continuous deployment | ✅ Complete |
 | 16 | Multi-model RCA — GPT-4o / Claude / Gemini fallback chain | 🗺️ Planned |
 | 17 | Historical RCA storage — PostgreSQL incident log | 🗺️ Planned |
 | 18 | Incident knowledge base — search previous RCA reports | 🗺️ Planned |
@@ -1168,4 +1168,4 @@ Before submitting a PR:
 
 [LinkedIn](https://www.linkedin.com/in/heyyprakhar1/) · [Portfolio](https://prakharsrivastava-devops.netlify.app) · [Hashnode](https://hashnode.com/@heyyprakhar01)
 
-</div>
+</divi>
