@@ -1134,15 +1134,8 @@ Your AWS CLI user needs: `eks:*`, `ec2:*`, `iam:PassRole`, `iam:CreateRole`, `ec
 | 11 | Security hardening — securityContext, UUID alert IDs, CVE fixes, full security pipeline | ✅ Complete |
 | 12 | Kubernetes Health Scoring Engine — cluster score + namespace scores | ✅ Complete |
 | 13 | AI RCA Engine — Ollama + Qwen2.5-Coder + evidence collection | ✅ Complete |
-| 14 | Kubernetes AI Operations Center — namespace cards + drill-down + RCA pan ✅ Complete |
+| 14 | Kubernetes AI Operations Center — namespace cards + drill-down + RCA pan | ✅ Complete |
 | 15 | GitOps — ArgoCD ApplicationSet, multi-env continuous deployment | ✅ Complete |
-| 16 | Multi-model RCA — GPT-4o / Claude / Gemini fallback chain | 🗺️ Planned |
-| 17 | Historical RCA storage — PostgreSQL incident log | 🗺️ Planned |
-| 18 | Incident knowledge base — search previous RCA reports | 🗺️ Planned |
-| 19 | Vector search — semantic similarity across past incidents | 🗺️ Planned |
-| 20 | Slack RCA delivery — post RCA summaries to incident channels | 🗺️ Planned |
-| 21 | Automated runbook generation — LLM-generated step-by-step fixes | 🗺️ Planned |
-| 22 | GitOps-triggered remediation — ArgoCD sync on AI recommendation | 🗺️ Planned |
 
 ---
 
