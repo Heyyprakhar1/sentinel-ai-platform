@@ -1,4 +1,5 @@
 import json
+import time
 
 from k8s_tools import (
     get_pod_logs,
@@ -15,50 +16,266 @@ llm = ChatOllama(
 )
 
 
-def investigate_pod(namespace, pod):
+KEYWORDS = [
+    "error",
+    "failed",
+    "crash",
+    "backoff",
+    "unauthorized",
+    "forbidden",
+    "denied",
+    "timeout",
+    "exception",
+    "fatal",
+    "oom",
+    "evicted",
+    "restart",
+    "unhealthy",
+]
+
+
+def extract_relevant_lines(text, limit=60):
+
+    if not text:
+        return ""
+
+    matched = []
+
+    for line in text.splitlines():
+
+        lower = line.lower()
+
+        if any(
+            keyword in lower
+            for keyword in KEYWORDS
+        ):
+            matched.append(
+                line.strip()
+            )
+
+    if matched:
+
+        return "\n".join(
+            matched[:limit]
+        )
+
+    return "\n".join(
+        text.splitlines()[:40]
+    )
+
+
+def trim_text(
+    text,
+    max_chars=3000,
+):
+
+    if not text:
+        return ""
+
+    return text[:max_chars]
+
+
+def build_prompt(
+    logs,
+    description,
+    events,
+):
+
+    return f"""
+You are a Senior Kubernetes SRE.
+
+Analyze the failure.
+
+Return ONLY valid JSON.
+
+{{
+  "root_cause": "",
+  "severity": "",
+  "confidence": "",
+  "evidence": [],
+  "recommended_fix": ""
+}}
+
+LOGS:
+{logs}
+
+DESCRIPTION:
+{description}
+
+EVENTS:
+{events}
+"""
+
+
+def safe_json_response(text):
+
+    if not text:
+
+        return {
+            "root_cause":
+                "Empty model response",
+            "severity":
+                "unknown",
+            "confidence":
+                "0%",
+            "evidence": [],
+            "recommended_fix":
+                "Retry RCA"
+        }
+
+    try:
+
+        text = text.strip()
+
+        text = text.replace(
+            "```json",
+            ""
+        )
+
+        text = text.replace(
+            "```",
+            ""
+        )
+
+        text = text.strip()
+
+        start = text.find("{")
+        end = text.rfind("}")
+
+        if (
+            start != -1
+            and end != -1
+        ):
+
+            text = text[
+                start:end + 1
+            ]
+
+        return json.loads(text)
+
+    except Exception as e:
+
+        return {
+            "root_cause":
+                text[:500],
+            "severity":
+                "unknown",
+            "confidence":
+                "low",
+            "evidence": [],
+            "recommended_fix":
+                f"Unable to parse model output: {e}"
+        }
+
+
+def investigate_pod(
+    namespace,
+    pod,
+):
+
+    overall_start = time.time()
+
+    print(
+        f"\n[RCA] Starting RCA for "
+        f"{namespace}/{pod}"
+    )
+
+    t1 = time.time()
 
     logs = get_pod_logs(
         namespace,
         pod,
     )
 
+    print(
+        "LOGS:",
+        round(
+            time.time() - t1,
+            2
+        ),
+        "sec"
+    )
+
+    t2 = time.time()
+
     description = get_pod_description(
         namespace,
         pod,
     )
 
+    print(
+        "DESCRIPTION:",
+        round(
+            time.time() - t2,
+            2
+        ),
+        "sec"
+    )
+
+    t3 = time.time()
+
     events = get_namespace_events(
         namespace,
     )
 
-    prompt = f"""
+    print(
+        "EVENTS:",
+        round(
+            time.time() - t3,
+            2
+        ),
+        "sec"
+    )
 
-Return ONLY valid JSON.
+    logs = trim_text(
+        extract_relevant_lines(
+            logs
+        )
+    )
 
-Do NOT use markdown.
-Do NOT use ```json
-Do NOT explain.
+    description = trim_text(
+        extract_relevant_lines(
+            description
+        )
+    )
 
-Required format:
+    events = trim_text(
+        extract_relevant_lines(
+            events
+        )
+    )
 
-{{
-  "root_cause": "...",
-  "severity": "...",
-  "confidence": "...",
-  "evidence": [],
-  "recommended_fix": "..."
-}}
+    prompt = build_prompt(
+        logs,
+        description,
+        events,
+    )
 
-Logs:
-{logs}
+    t4 = time.time()
 
-Description:
-{description}
+    response = llm.invoke(
+        prompt
+    )
 
-Events:
-{events}
-"""
+    print(
+        "LLM:",
+        round(
+            time.time() - t4,
+            2
+        ),
+        "sec"
+    )
 
-    response = llm.invoke(prompt)
+    print(
+        "TOTAL RCA:",
+        round(
+            time.time()
+            - overall_start,
+            2
+        ),
+        "sec"
+    )
 
-    return response.content
+    return safe_json_response(
+        response.content
+    )

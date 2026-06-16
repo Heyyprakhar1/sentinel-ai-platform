@@ -157,12 +157,10 @@ def get_cluster_health_report():
 
     cluster_score = calculate_cluster_score()
 
-    rca_reports = generate_rca_for_problematic_pods()
-
     return {
         "cluster_score": cluster_score,
         "healthy": cluster_score >= 90,
         "namespace_health": namespace_scores,
         "problematic_pods": problematic,
-        "rca_reports": rca_reports,
+        "rca_reports": []
     }
