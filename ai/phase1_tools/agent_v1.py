@@ -1,6 +1,6 @@
 from langchain_ollama import ChatOllama
 
-from tools import (
+from ai.phase1_tools.tools import (
     get_disk_usage,
     get_memory_usage,
     get_cpu_usage,

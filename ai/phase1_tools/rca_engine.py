@@ -1,7 +1,7 @@
 import json
 import time
 
-from k8s_tools import (
+from ai.phase1_tools.k8s_tools import (
     get_pod_logs,
     get_pod_description,
     get_namespace_events,

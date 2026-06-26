@@ -1,13 +1,13 @@
 from langchain_ollama import ChatOllama
 import json
 
-from system_tools import (
+from ai.phase1_tools.system_tools import (
     get_disk_usage,
     get_memory_usage,
     get_cpu_usage,
 )
 
-from k8s_tools import (
+from ai.phase1_tools.k8s_tools import (
     get_pods,
     get_nodes,
     get_namespaces,
