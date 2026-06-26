@@ -1,5 +1,10 @@
-from health_score import find_problematic_pods
-from rca_engine import investigate_pod
+from ai.phase1_tools.health_score import (
+    find_problematic_pods,
+)
+
+from ai.phase1_tools.rca_engine import (
+    investigate_pod,
+)
 
 
 RCA_CACHE = {}
@@ -35,10 +40,6 @@ def get_namespace_rca(namespace_name):
 
     if namespace_name in RCA_CACHE:
 
-        print(
-            f"[CACHE HIT] {namespace_name}"
-        )
-
         return RCA_CACHE[namespace_name]
 
     problematic = find_problematic_pods()
@@ -60,10 +61,6 @@ def get_namespace_rca(namespace_name):
 
     try:
 
-        print(
-            f"[RCA GENERATION] {namespace_name}"
-        )
-
         rca = investigate_pod(
             namespace_name,
             pod["pod"]
@@ -75,9 +72,7 @@ def get_namespace_rca(namespace_name):
             "analysis": rca
         }
 
-        RCA_CACHE[
-            namespace_name
-        ] = result
+        RCA_CACHE[namespace_name] = result
 
         return result
 
