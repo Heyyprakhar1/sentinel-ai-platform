@@ -14,3 +14,11 @@ frontend/node_modules/
 .env
 /package-lock.json
 .coverage
+# Frontend build
+frontend/dist/
+
+# Coverage
+coverage.xml
+
+# Local kubeconfig
+k3d-kubeconfig.yaml
