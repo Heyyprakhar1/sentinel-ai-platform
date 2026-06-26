@@ -3,7 +3,9 @@ import subprocess
 
 def cluster_health():
 
-    from health_score import get_cluster_health_report
+    from ai.phase1_tools.health_score import (
+        get_cluster_health_report
+    )
 
     return get_cluster_health_report()
 

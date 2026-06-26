@@ -1,8 +1,9 @@
 import subprocess
 import json
 from collections import defaultdict
-from rca_engine import investigate_pod
-
+from ai.phase1_tools.rca_engine import (
+    investigate_pod
+)
 
 def get_pod_data():
 

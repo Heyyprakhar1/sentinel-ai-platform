@@ -2,10 +2,9 @@ import subprocess
 import json
 import time
 
-from health_score import (
+from ai.phase1_tools.health_score import (
     get_cluster_health_report
 )
-
 
 def get_namespaces():
 
