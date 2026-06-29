@@ -1,133 +1,141 @@
-.PHONY: help build run stop deploy-dev deploy-staging deploy-prod status logs clean
+SHELL := /usr/bin/env bash
 
-# ── Variables ──────────────────────────────────────
-IMAGE_NAME=sentinelai
-IMAGE_TAG=1.0.0
-CLUSTER_NAME=Sentinel-Cluster
+.DEFAULT_GOAL := help
 
-# ── Help ───────────────────────────────────────────
+SCRIPTS := scripts
+
+.PHONY: \
+        help \
+        docker \
+        kubectl \
+        helm \
+        deploy \
+        k3d \
+        install \
+        detect \
+        create \
+        kubeconfig \
+        discover \
+        network \
+        cluster \
+        namespaces \
+        monitoring \
+        argocd \
+        doctor \
+        setup \
+        teardown
+
+# ============================================================
+# SentinelAI Platform
+# ============================================================
+
 help:
 	@echo ""
-	@echo "  SentinelAI — Available Commands"
+	@echo "=================================================="
+	@echo "            SentinelAI Platform"
+	@echo "=================================================="
 	@echo ""
-	@echo "  Docker:"
-	@echo "    make build          Build Docker image"
-	@echo "    make run            Run container locally"
-	@echo "    make stop           Stop container"
+	@echo "Available Commands"
 	@echo ""
-	@echo "  Kubernetes:"
-	@echo "    make deploy-dev     Deploy to dev environment"
-	@echo "    make deploy-staging Deploy to staging environment"
-	@echo "    make deploy-prod    Deploy to prod environment"
-	@echo "    make status         Show all environments status"
-	@echo "    make status-dev     Show dev environment status"
-	@echo "    make logs-dev       Show dev pod logs"
+	@echo "Installation"
+	@echo "  make docker        Install Docker"
+	@echo "  make kubectl       Install kubectl"
+	@echo "  make helm          Install Helm"
+	@echo "  make k3d           Install k3d"
+	@echo "  make install       Install all dependencies"
 	@echo ""
-	@echo "  Cluster:"
-	@echo "    make cluster-up     Create K3d cluster"
-	@echo "    make cluster-down   Delete K3d cluster"
-	@echo "    make import-image   Import image into cluster"
+	@echo "Cluster"
+	@echo "  make detect        Detect environment"
+	@echo "  make create        Create Kubernetes cluster"
+	@echo "  make kubeconfig    Export kubeconfig"
+	@echo "  make discover      Discover cluster"
+	@echo "  make network       Configure Docker network"
+	@echo "  make cluster       Complete cluster setup"
 	@echo ""
-	@echo "  Cleanup:"
-	@echo "    make clean          Remove all environments"
+	@echo "Deployment"
+	@echo "  make namespaces    Create namespaces"
+	@echo "  make deploy        Deploy platform components"
+	@echo "  make monitoring    Deploy monitoring stack"
+	@echo "  make argocd        Deploy ArgoCD"
 	@echo ""
-	@echo "  Full Stack:"
-	@echo "    make setup-all     Bring up entire stack"
-	@echo "    make teardown-all  Tear down entire stack"
+	@echo "Health"
+	@echo "  make doctor        Run platform diagnostics"
+	@echo ""
+	@echo "Platform"
+	@echo "  make setup         Complete platform setup"
+	@echo "  make teardown      Remove complete platform"
 	@echo ""
 
-# ── Docker ─────────────────────────────────────────
-build:
-	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
+# ============================================================
+# Installation
+# ============================================================
 
-run:
-	docker run -d --name sentinelai-app -p 8000:8000 $(IMAGE_NAME):$(IMAGE_TAG)
+docker:
+	@bash $(SCRIPTS)/install/docker.sh
 
-stop:
-	docker stop sentinelai-app && docker rm sentinelai-app
+kubectl:
+	@bash $(SCRIPTS)/install/kubectl.sh
 
-# ── Cluster ────────────────────────────────────────
-cluster-up:
-	bash scripts/k3d-setup.sh
+helm:
+	@bash $(SCRIPTS)/install/helm.sh
 
-cluster-down:
-	k3d cluster delete $(CLUSTER_NAME)
+k3d:
+	@bash $(SCRIPTS)/install/k3d.sh
 
-import-image:
-	k3d image import $(IMAGE_NAME):$(IMAGE_TAG) -c $(CLUSTER_NAME)
+install:
+	@$(MAKE) --no-print-directory docker
+	@$(MAKE) --no-print-directory kubectl
+	@$(MAKE) --no-print-directory helm
+	@$(MAKE) --no-print-directory k3d
 
-# ── Kubernetes Deploy ──────────────────────────────
-deploy-dev:
-	kubectl apply -k k8s/overlays/dev/
+# ============================================================
+# Cluster
+# ============================================================
 
-deploy-staging:
-	kubectl apply -k k8s/overlays/staging/
+detect:
+	@bash $(SCRIPTS)/cluster/detect.sh
 
-deploy-prod:
-	kubectl apply -k k8s/overlays/prod/
+create:
+	@bash $(SCRIPTS)/cluster/create.sh
 
-deploy-all:
-	kubectl apply -f k8s/namespaces.yaml
-	kubectl apply -k k8s/overlays/dev/
-	kubectl apply -k k8s/overlays/staging/
-	kubectl apply -k k8s/overlays/prod/
+kubeconfig:
+	@bash $(SCRIPTS)/cluster/kubeconfig.sh
 
-# ── Status ─────────────────────────────────────────
-status:
-	@echo "\n── Dev ──────────────────────────────"
-	kubectl get all -n sentinelai-dev
-	@echo "\n── Staging ──────────────────────────"
-	kubectl get all -n sentinelai-staging
-	@echo "\n── Prod ─────────────────────────────"
-	kubectl get all -n sentinelai-prod
+discover:
+	@bash $(SCRIPTS)/cluster/discover.sh
 
-status-dev:
-	kubectl get all -n sentinelai-dev
+network:
+	@bash $(SCRIPTS)/cluster/network.sh
 
-status-staging:
-	kubectl get all -n sentinelai-staging
+cluster:
+	@$(MAKE) --no-print-directory detect
+	@$(MAKE) --no-print-directory create
+	@$(MAKE) --no-print-directory kubeconfig
+	@$(MAKE) --no-print-directory discover
+	@$(MAKE) --no-print-directory network
 
-status-prod:
-	kubectl get all -n sentinelai-prod
+# ============================================================
+# Deployment
+# ============================================================
 
-# ── Logs ───────────────────────────────────────────
-logs-dev:
-	kubectl logs -l app=sentinelai -n sentinelai-dev --tail=50
+namespaces:
+	@bash $(SCRIPTS)/deploy/namespaces.sh
 
-logs-staging:
-	kubectl logs -l app=sentinelai -n sentinelai-staging --tail=50
+monitoring:
+	@bash $(SCRIPTS)/deploy/monitoring.sh
 
-logs-prod:
-	kubectl logs -l app=sentinelai -n sentinelai-prod --tail=50
+argocd:
+	@bash $(SCRIPTS)/deploy/argocd.sh
 
-# ── Cleanup ────────────────────────────────────────
-clean:
-	kubectl delete -k k8s/overlays/dev/ --ignore-not-found
-	kubectl delete -k k8s/overlays/staging/ --ignore-not-found
-	kubectl delete -k k8s/overlays/prod/ --ignore-not-found
+deploy:
+	@$(MAKE) --no-print-directory namespaces
+	@$(MAKE) --no-print-directory monitoring
+	@echo ""
+	@echo "[WARN] Skipping ArgoCD deployment (temporarily disabled)."
 
-# ── Docker Compose ─────────────────────────────────────────────────
-compose-up:
-	docker compose up -d
+# ============================================================
+# Health
+# ============================================================
 
-compose-down:
-	docker compose down
-
-compose-logs:
-	docker compose logs -f
-
-compose-ps:
-	docker compose ps
-
-compose-restart:
-	docker compose restart
-
-compose-build:
-	docker compose build --no-cache
-
-# ── Full Stack ─────────────────────────────────────────────────────
-setup-all:
-	bash scripts/setup-all.sh
-
-teardown-all:
-	bash scripts/teardown-all.sh
+doctor:
+	@bash $(SCRIPTS)/health/doctor.sh

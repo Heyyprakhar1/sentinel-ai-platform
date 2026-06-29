@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
 
     volumes:
-      - ./k3d-kubeconfig.yaml:/tmp/kubeconfig:ro
+      - ${KUBECONFIG_PATH}:/tmp/kubeconfig:ro
 
     environment:
       KUBECONFIG: /tmp/kubeconfig
@@ -19,7 +19,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
 
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
 
     healthcheck:
       test:
@@ -36,7 +36,6 @@ services:
 
     networks:
       - sentinelai-net
-      - k3d-Sentinel-Cluster
 
   sentinelai-frontend:
     build:
@@ -68,9 +67,9 @@ services:
       - ./monitoring/compose/prometheus.yml:/etc/prometheus/prometheus.yml:ro
 
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=7d'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
 
     networks:
       - sentinelai-net
@@ -85,7 +84,7 @@ services:
 
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set in .env}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set}
       GF_USERS_ALLOW_SIGN_UP: "false"
 
     volumes:
@@ -117,6 +116,3 @@ volumes:
 networks:
   sentinelai-net:
     driver: bridge
-
-  k3d-Sentinel-Cluster:
-    external: true
