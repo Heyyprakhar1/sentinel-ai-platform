@@ -12,12 +12,6 @@ source "${SCRIPT_DIR}/discover.sh"
 # SentinelAI - Docker Network Management
 # ============================================================
 
-network_exists() {
-
-    docker network inspect "$(get_network_name)" >/dev/null 2>&1
-
-}
-
 backend_container_exists() {
 
     docker inspect "$(get_backend_container)" >/dev/null 2>&1
@@ -42,7 +36,11 @@ connect_backend_network() {
     backend="$(get_backend_container)"
 
     [[ -z "${network}" ]] && die "Docker network not found."
-    [[ -z "${backend}" ]] && die "Backend container not found. Run 'docker compose up -d' first."
+
+    if [[ -z "${backend}" ]]; then
+        log_info "Docker Compose backend not found. Skipping network configuration."
+        return 0
+    fi
 
     if container_connected; then
         log_success "Backend already connected to '${network}'."
@@ -90,6 +88,11 @@ disconnect_backend_network() {
 
 verify_network() {
 
+    if ! backend_container_exists; then
+        log_info "Docker Compose backend not running. Network verification skipped."
+        return 0
+    fi
+
     if container_connected; then
         log_success "Backend is connected to '$(get_network_name)'."
     else
@@ -103,5 +106,8 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     connect_backend_network
 
     verify_network
+
+    echo
+    log_success "Docker network checks completed."
 
 fi
