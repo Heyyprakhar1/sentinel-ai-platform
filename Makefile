@@ -4,6 +4,8 @@ SHELL := /usr/bin/env bash
 
 SCRIPTS := scripts
 
+ENV ?= dev
+
 .PHONY: \
         help \
         docker \
@@ -130,8 +132,9 @@ argocd:
 deploy:
 	@$(MAKE) --no-print-directory namespaces
 	@$(MAKE) --no-print-directory monitoring
+	@bash $(SCRIPTS)/deploy/application.sh $(ENV)
 	@echo ""
-	@echo "[WARN] Skipping ArgoCD deployment (temporarily disabled)."
+	@echo "[OK] Deployment completed."
 
 # ============================================================
 # Health

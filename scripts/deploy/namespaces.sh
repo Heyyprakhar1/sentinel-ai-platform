@@ -20,11 +20,17 @@ NAMESPACES=(
     sentinelai-prod
 )
 
+ensure_kubeconfig
+
+k() {
+    kubectl --kubeconfig "${KUBECONFIG_FILE}" "$@"
+}
+
 namespace_exists() {
 
     local namespace="$1"
 
-    kubectl get namespace "${namespace}" >/dev/null 2>&1
+    k get namespace "${namespace}" >/dev/null 2>&1
 
 }
 
@@ -39,15 +45,13 @@ create_namespace() {
 
     log_info "Creating namespace '${namespace}'..."
 
-    kubectl create namespace "${namespace}"
+    k create namespace "${namespace}"
 
     log_success "Namespace '${namespace}' created."
 
 }
 
 create_all_namespaces() {
-
-    export KUBECONFIG="${KUBECONFIG_FILE}"
 
     for namespace in "${NAMESPACES[@]}"; do
         create_namespace "${namespace}"
@@ -57,11 +61,9 @@ create_all_namespaces() {
 
 verify_namespaces() {
 
-    export KUBECONFIG="${KUBECONFIG_FILE}"
-
     log_info "Verifying namespaces..."
 
-    kubectl get namespaces
+    k get namespaces
 
     log_success "Namespace verification completed."
 
