@@ -3,29 +3,17 @@ SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 
 SCRIPTS := scripts
-
 ENV ?= dev
 
 .PHONY: \
-        help \
-        docker \
-        kubectl \
-        helm \
-        deploy \
-        k3d \
-        install \
-        detect \
-        create \
-        kubeconfig \
-        discover \
-        network \
-        cluster \
-        namespaces \
-        monitoring \
-        argocd \
-        doctor \
-        setup \
-        teardown
+	help \
+	docker kubectl helm k3d install \
+	detect create kubeconfig discover network cluster \
+	backend frontend build \
+	namespaces monitoring argocd \
+	deploy deploy-backend deploy-frontend \
+	doctor restart logs \
+	clean teardown all
 
 # ============================================================
 # SentinelAI Platform
@@ -34,38 +22,34 @@ ENV ?= dev
 help:
 	@echo ""
 	@echo "=================================================="
-	@echo "            SentinelAI Platform"
+	@echo "             SentinelAI Platform"
 	@echo "=================================================="
 	@echo ""
-	@echo "Available Commands"
-	@echo ""
 	@echo "Installation"
-	@echo "  make docker        Install Docker"
-	@echo "  make kubectl       Install kubectl"
-	@echo "  make helm          Install Helm"
-	@echo "  make k3d           Install k3d"
-	@echo "  make install       Install all dependencies"
+	@echo "  make install"
 	@echo ""
 	@echo "Cluster"
-	@echo "  make detect        Detect environment"
-	@echo "  make create        Create Kubernetes cluster"
-	@echo "  make kubeconfig    Export kubeconfig"
-	@echo "  make discover      Discover cluster"
-	@echo "  make network       Configure Docker network"
-	@echo "  make cluster       Complete cluster setup"
+	@echo "  make cluster"
+	@echo ""
+	@echo "Images"
+	@echo "  make backend"
+	@echo "  make frontend"
+	@echo "  make build"
 	@echo ""
 	@echo "Deployment"
-	@echo "  make namespaces    Create namespaces"
-	@echo "  make deploy        Deploy platform components"
-	@echo "  make monitoring    Deploy monitoring stack"
-	@echo "  make argocd        Deploy ArgoCD"
+	@echo "  make deploy"
 	@echo ""
-	@echo "Health"
-	@echo "  make doctor        Run platform diagnostics"
+	@echo "Operations"
+	@echo "  make doctor"
+	@echo "  make restart"
+	@echo "  make logs"
 	@echo ""
-	@echo "Platform"
-	@echo "  make setup         Complete platform setup"
-	@echo "  make teardown      Remove complete platform"
+	@echo "Cleanup"
+	@echo "  make clean"
+	@echo "  make teardown"
+	@echo ""
+	@echo "Complete Platform"
+	@echo "  make all"
 	@echo ""
 
 # ============================================================
@@ -117,6 +101,20 @@ cluster:
 	@$(MAKE) --no-print-directory network
 
 # ============================================================
+# Build Images
+# ============================================================
+
+backend:
+	@bash $(SCRIPTS)/build/backend.sh
+
+frontend:
+	@bash $(SCRIPTS)/build/frontend.sh
+
+build:
+	@$(MAKE) --no-print-directory backend
+	@$(MAKE) --no-print-directory frontend
+
+# ============================================================
 # Deployment
 # ============================================================
 
@@ -129,12 +127,22 @@ monitoring:
 argocd:
 	@bash $(SCRIPTS)/deploy/argocd.sh
 
+deploy-backend:
+	@bash $(SCRIPTS)/deploy/application.sh $(ENV)
+
+deploy-frontend:
+	@bash $(SCRIPTS)/deploy/frontend.sh
+
 deploy:
 	@$(MAKE) --no-print-directory namespaces
 	@$(MAKE) --no-print-directory monitoring
-	@bash $(SCRIPTS)/deploy/application.sh $(ENV)
+	@$(MAKE) --no-print-directory deploy-backend
+	@$(MAKE) --no-print-directory deploy-frontend
+
 	@echo ""
-	@echo "[OK] Deployment completed."
+	@echo "======================================="
+	@echo "[OK] SentinelAI deployed successfully."
+	@echo "======================================="
 
 # ============================================================
 # Health
@@ -142,3 +150,77 @@ deploy:
 
 doctor:
 	@bash $(SCRIPTS)/health/doctor.sh
+
+# ============================================================
+# Operations
+# ============================================================
+
+restart:
+	@kubectl rollout restart deployment/dev-sentinelai -n sentinelai-dev
+	@kubectl rollout restart deployment/sentinelai-frontend -n sentinelai-dev
+
+logs:
+	@kubectl logs -n sentinelai-dev deployment/dev-sentinelai -f
+
+clean:
+	@docker image prune -f
+
+teardown:
+	@bash $(SCRIPTS)/teardown.sh
+
+# ============================================================
+# Complete Platform Setup
+# ============================================================
+
+setup:
+	@echo ""
+	@echo "=================================================="
+	@echo "        SentinelAI Platform Setup"
+	@echo "=================================================="
+	@echo ""
+
+	@$(MAKE) --no-print-directory cluster
+
+	@$(MAKE) --no-print-directory namespaces
+
+	@$(MAKE) --no-print-directory monitoring
+
+	@$(MAKE) --no-print-directory argocd
+
+	@$(MAKE) --no-print-directory build
+
+	@$(MAKE) --no-print-directory deploy
+
+	@$(MAKE) --no-print-directory doctor
+
+	@echo ""
+	@echo "=================================================="
+	@echo "             SentinelAI Platform Ready"
+	@echo "=================================================="
+	@echo ""
+
+	@echo " Components"
+	@echo " ----------"
+	@echo "  ✓ Kubernetes Cluster"
+	@echo "  ✓ Backend API"
+	@echo "  ✓ Frontend Dashboard"
+	@echo "  ✓ Prometheus"
+	@echo "  ✓ Grafana"
+	@echo "  ✓ ArgoCD"
+
+	@echo ""
+	@echo " Statistics"
+	@echo " ----------"
+	@printf "  Pods         : "
+	@kubectl get pods -A --no-headers | wc -l
+
+	@printf "  Namespaces   : "
+	@kubectl get ns --no-headers | wc -l
+
+	@printf "  Context      : "
+	@kubectl config current-context
+
+	@echo ""
+	@echo "=================================================="
+	@echo "        SentinelAI is Ready to Use 🚀"
+	@echo "=================================================="

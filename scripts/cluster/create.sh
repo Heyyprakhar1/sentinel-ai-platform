@@ -14,11 +14,12 @@ CLUSTER_NAME="${CLUSTER_NAME:-Sentinel-Cluster}"
 AGENTS="${AGENTS:-2}"
 API_PORT="${API_PORT:-6445}"
 
+HTTP_PORT="${HTTP_PORT:-80}"
+HTTPS_PORT="${HTTPS_PORT:-443}"
+
 cluster_exists() {
 
-    if ! command_exists k3d; then
-        die "k3d is not installed."
-    fi
+    command_exists k3d || die "k3d is not installed."
 
     k3d cluster list | awk '{print $1}' | grep -Fxq "${CLUSTER_NAME}"
 
@@ -35,7 +36,9 @@ create_cluster() {
 
     k3d cluster create "${CLUSTER_NAME}" \
         --agents "${AGENTS}" \
-        --api-port "${API_PORT}"
+        --api-port "${API_PORT}" \
+        --port "${HTTP_PORT}:80@loadbalancer" \
+        --port "${HTTPS_PORT}:443@loadbalancer"
 
     log_success "Cluster created successfully."
 
@@ -51,9 +54,7 @@ wait_for_cluster() {
 
         ((retries--))
 
-        if [[ "${retries}" -le 0 ]]; then
-            die "Cluster did not become ready."
-        fi
+        [[ "${retries}" -le 0 ]] && die "Cluster did not become ready."
 
         sleep 2
 
